@@ -9,13 +9,6 @@ function formatStars(stars: number) {
     maximumFractionDigits: 1,
   }).format(stars)
 }
-
-const stateIcons: Record<PullRequest['state'], string> = {
-  open: 'i-lucide-git-pull-request-arrow',
-  draft: 'i-lucide-git-pull-request-draft',
-  merged: 'i-lucide-git-merge',
-  closed: 'i-lucide-git-pull-request-closed',
-}
 </script>
 
 <template>
@@ -31,19 +24,13 @@ const stateIcons: Record<PullRequest['state'], string> = {
 
     <div class="flex-1 flex justify-between gap-2 lg:gap-4 min-w-0">
       <div class="flex flex-col min-w-0 gap-0.5 sm:gap-1">
-        <a :href="data.url" target="_blank" class="text-sm sm:text-base flex items-center gap-0.5 sm:gap-1 hover:underline text-neutral-900 dark:text-white">
+        <a :href="data.url" target="_blank" class="text-sm sm:text-base flex items-center gap-0.5 sm:gap-1 min-w-0 hover:underline text-neutral-900 dark:text-white">
           <UIcon
-            :name="stateIcons[data.state]"
-            :class="{
-              'text-green-500 dark:text-green-400': data.state === 'open',
-              'text-neutral-500 dark:text-neutral-400': data.state === 'draft',
-              'text-purple-500 dark:text-purple-400': data.state === 'merged',
-              'text-red-500 dark:text-red-400': data.state === 'closed',
-            }"
-            class="size-4 sm:size-5 shrink-0"
+            name="i-lucide-git-merge"
+            class="size-4 sm:size-5 shrink-0 text-purple-500 dark:text-purple-400"
           />
 
-          <span class="truncate">{{ data.title }}</span>
+          <span class="min-w-0 truncate">{{ data.title }}</span>
         </a>
 
         <div class="flex gap-2 items-bottom">
@@ -64,7 +51,7 @@ const stateIcons: Record<PullRequest['state'], string> = {
           #{{ data.number }}
         </a>
 
-        <time :datatime="data.created_at" class="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">{{ useTimeAgo(new Date(data.created_at)) }}</time>
+        <time :datetime="data.merged_at" class="text-xs sm:text-sm text-neutral-500 dark:text-neutral-400">{{ useTimeAgo(new Date(data.merged_at)) }}</time>
       </div>
     </div>
   </div>

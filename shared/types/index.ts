@@ -8,8 +8,7 @@ export type PullRequest = {
   repo: string
   title: string
   url: string
-  created_at: string
-  state: 'merged' | 'draft' | 'open' | 'closed'
+  merged_at: string
   number: number
   type: 'User' | 'Organization'
   stars: number

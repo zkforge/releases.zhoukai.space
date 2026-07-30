@@ -1,6 +1,5 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-
   // https://nuxt.com/modules
   modules: ['@nuxt/eslint', '@nuxt/ui', '@vueuse/nuxt'],
 
@@ -15,6 +14,13 @@ export default defineNuxtConfig({
   // https://devtools.nuxt.com
   devtools: { enabled: true },
   css: ['~/assets/css/main.css'],
+
+  runtimeConfig: {
+    public: {
+      githubName: process.env.GITHUB_NAME || 'Zhou Kai',
+      githubUsername: process.env.GITHUB_USERNAME || 'zkforge',
+    },
+  },
 
   // https://nuxt.com/docs/getting-started/upgrade#testing-nuxt-4
   compatibilityDate: '2025-01-01',

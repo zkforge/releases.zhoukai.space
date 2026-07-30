@@ -1,27 +1,29 @@
 <script setup lang="ts">
 const colorMode = useColorMode()
-const { data: contributions } = await useFetch <Contributions> ('/api/contributions')
+const config = useRuntimeConfig()
+const { data: contributions, error, status } = await useFetch<Contributions>('/api/contributions')
 
-if (!contributions.value) {
-  throw createError('Could not load User activity')
-}
-
-const { user, prs } = contributions.value
-const userUrl = `https://github.com/${user.username}`
+const user = computed(() => contributions.value?.user ?? {
+  name: config.public.githubName,
+  username: config.public.githubUsername,
+  avatar: `https://github.com/${config.public.githubUsername}.png`,
+})
+const prs = computed(() => contributions.value?.prs ?? [])
+const userUrl = computed(() => `https://github.com/${user.value.username}`)
 
 useHead({
   link: [
     { rel: 'icon', href: '/favicon.png' },
     { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-    { rel: 'alternate', type: 'application/rss+xml', title: `${user.name}'s recent pull requests`, href: '/feed.xml' },
+    { rel: 'alternate', type: 'application/rss+xml', title: `${config.public.githubName}'s merged pull requests`, href: '/feed.xml' },
   ],
 })
 const url = useRequestURL()
 useSeoMeta({
-  title: `${user.name} is Contributing`,
-  description: `Discover ${user.name} recent pull requests on GitHub.`,
-  ogTitle: `${user.name} is Contributing`,
-  ogDescription: `Discover ${user.name} recent pull requests on GitHub.`,
+  title: `${config.public.githubName} is Contributing`,
+  description: `Discover ${config.public.githubName}'s merged pull requests on GitHub.`,
+  ogTitle: `${config.public.githubName} is Contributing`,
+  ogDescription: `Discover ${config.public.githubName}'s merged pull requests on GitHub.`,
   twitterCard: 'summary_large_image',
   ogImage: `${url.origin}/og.png`,
   twitterImage: `${url.origin}/og.png`,
@@ -44,7 +46,7 @@ const items = computed(() => [
     },
   }],
   [{
-    label: orderKey.value === 'date' ? 'Oldset' : 'Ascending',
+    label: orderKey.value === 'date' ? 'Oldest' : 'Ascending',
     icon: 'i-lucide-arrow-up-narrow-wide',
     checked: order.value === 'asc',
     type: 'checkbox' as const,
@@ -71,14 +73,14 @@ const items = computed(() => [
 ])
 
 const orderedPrs = computed(() => {
-  const sortedPrs = [...prs]
+  const sortedPrs = [...prs.value]
   sortedPrs.sort((a, b) => {
     if (orderKey.value === 'star') {
       return order.value === 'asc' ? a.stars - b.stars : b.stars - a.stars
     }
     else {
-      const dateA = new Date(a.created_at).getTime()
-      const dateB = new Date(b.created_at).getTime()
+      const dateA = new Date(a.merged_at).getTime()
+      const dateB = new Date(b.merged_at).getTime()
       return order.value === 'asc' ? dateA - dateB : dateB - dateA
     }
   })
@@ -101,9 +103,9 @@ const orderedPrs = computed(() => {
         </a>
         is <span class="animate-pulse">Contributing...</span>
       </h1>
-      <p class="text-center text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-300">
-        <NuxtLink :to="userUrl" target="_blank">
-          @{{ user.username }}'s recent pull requests on GitHub.
+      <p class="w-full px-2 text-center text-neutral-500 hover:text-neutral-700 dark:text-neutral-400 dark:hover:text-neutral-300">
+        <NuxtLink :to="userUrl" target="_blank" class="block truncate">
+          @{{ user.username }}'s merged pull requests on GitHub.
         </NuxtLink>
       </p>
       <div class="flex items-center justify-center gap-1 text-neutral-700 dark:text-neutral-300">
@@ -144,6 +146,7 @@ const orderedPrs = computed(() => {
     <div class="relative">
       <div class="flex justify-end absolute -top-10 lg:-top-12 right-0">
         <UDropdownMenu
+          v-if="orderedPrs.length"
           :items="items"
           :content="{
             align: 'start',
@@ -156,8 +159,8 @@ const orderedPrs = computed(() => {
           size="xs"
         >
           <UButton
-            :label="orderKey === 'star' ? 'Stars': order === 'asc' ? 'Oldset': 'Newset'"
-            :icon="order === 'asc' ? 'i-lucide-arrow-up-narrow-wide': 'i-lucide-arrow-down-narrow-wide' "
+            :label="orderKey === 'star' ? 'Stars' : order === 'asc' ? 'Oldest' : 'Newest'"
+            :icon="order === 'asc' ? 'i-lucide-arrow-up-narrow-wide' : 'i-lucide-arrow-down-narrow-wide'"
             color="neutral"
             variant="soft"
             size="xs"
@@ -165,7 +168,28 @@ const orderedPrs = computed(() => {
         </UDropdownMenu>
       </div>
       <div class="flex flex-col gap-6 mt-5 sm:gap-10">
-        <PullRequest v-for="pr of orderedPrs" :key="pr.url" :data="pr" />
+        <p v-if="status === 'pending'" class="py-12 text-center text-neutral-500 dark:text-neutral-400">
+          Loading merged pull requests…
+        </p>
+        <div v-else-if="error" class="py-12 text-center">
+          <p class="font-medium text-neutral-900 dark:text-white">
+            GitHub activity could not be loaded.
+          </p>
+          <p class="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+            Visit <a :href="userUrl" target="_blank" class="underline">@{{ user.username }}</a> on GitHub instead.
+          </p>
+        </div>
+        <div v-else-if="!orderedPrs.length" class="py-12 text-center">
+          <p class="font-medium text-neutral-900 dark:text-white">
+            No public merged pull requests yet.
+          </p>
+          <p class="mt-2 text-sm text-neutral-500 dark:text-neutral-400">
+            New contributions will appear here after they are merged.
+          </p>
+        </div>
+        <template v-else>
+          <PullRequest v-for="pr of orderedPrs" :key="pr.url" :data="pr" />
+        </template>
       </div>
     </div>
   </UContainer>
