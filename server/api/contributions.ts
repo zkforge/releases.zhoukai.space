@@ -14,12 +14,13 @@ export default defineEventHandler(async () => {
   const excludeOrgs = process.env.EXCLUDE_ORGS?.split(',').map(org => org.trim()).filter(Boolean) ?? []
   const prCount = Number(process.env.PR_COUNT ?? 50)
 
-  // Fetch public pull requests authored by the user and merged by maintainers.
+  // Fetch public merged pull requests authored by the user in other owners' repositories.
   const queryParts = [
     'is:pr',
     'is:merged',
     'is:public',
     `author:"${user.username}"`,
+    `-user:"${user.username}"`,
     ...excludeRepos.map(repo => `-repo:${repo}`),
     ...excludeOrgs.map(org => `-org:${org}`),
   ]

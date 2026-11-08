@@ -7,7 +7,7 @@ The site only lists public pull requests authored by
 
 ## Features
 
-- Lists the 50 most recent public merged pull requests.
+- Lists the 50 most recent public merged pull requests to repositories owned by others.
 - Sorts by merge date or repository stars.
 - Includes dark mode and an RSS feed.
 - Uses a GitHub token only to increase the public API rate limit.
